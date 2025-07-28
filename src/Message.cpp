@@ -4,7 +4,7 @@
 Importance Message::GetImportance() {
 	return importance;
 }
-void Message::SaveMessage(std::fstream& file) {
+void Message::Save(std::fstream& file) {
 	if (file.is_open()) {
 		file << timestamp.tm_hour << timestamp.tm_min << static_cast<int>(importance) << text << std::endl;
 	}
@@ -13,7 +13,7 @@ void Message::SaveMessage(std::fstream& file) {
 	}
 }
 
-void Message::ReadMessage(std::fstream& file) {
+void Message::ReadFromFile(std::fstream& file) {
 
 	int i;
 	if (!file.is_open()) {
