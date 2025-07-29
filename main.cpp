@@ -101,12 +101,12 @@ int main() {
             flagRW.store(true, std::memory_order_release);
             cvW.notify_one();
             {
-                //std::wcout << L"Ждём сообщений из журнала..." << std::endl;
+                
                 std::unique_lock<std::mutex> locker(gateR);
                 cvR.wait(locker, [] { return !ToConsole.empty(); });
-                //std::wcout << L"Получены сообщения из журнала:" << std::endl;
+                
                 while (!ToConsole.empty()) {
-                    //std::wcout << L"Вызов функци вывода" << std::endl;
+                    
                     print_msg(ToConsole.front());
                     destroy_msg(ToConsole.front());
                     ToConsole.pop();
@@ -144,21 +144,21 @@ void sideThread() {
     }
 
     while (!endWork.load(std::memory_order_acquire)) {
-        //std::wcout << L"Начало цикла\n";
+        
         if (flagRW.load(std::memory_order_acquire)) { //Чтение
-            //std::wcout << L"Зашли на чтение\n";
+            
             std::vector<Message*>* v = journal_read(journal);
             {
                 std::unique_lock<std::mutex> locker(gateR);
-                //std::wcout << L"Залочили чтение\n";
+                
                 for (const auto& e : *v) {
                     ToConsole.push(e);
-                    //std::wcout << L"Толкнули сообщение в очередь\n";
+                    
                 }
                 destroy_msg_vec(v);
             }
             cvR.notify_one();
-            //std::wcout << L"Уведомили на чтение\n";
+            
             flagRW.store(false, std::memory_order_release);
         }
         else { //Запись
@@ -166,10 +166,10 @@ void sideThread() {
                 
                 cvW.wait(locker, [] { return !ToJournal.empty() || endWork.load(std::memory_order_acquire) || flagRW.load(std::memory_order_acquire); });
                 {
-                   //std::wcout << L"Изменение уровня\n";
+                   
                     std::unique_lock<std::mutex> locker(gateInit);
                     change_importance(journal, current);
-                    //std::wcout << L"успех\n";
+                    
                 }
                 while (!ToJournal.empty())
                 {
