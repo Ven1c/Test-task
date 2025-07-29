@@ -1,15 +1,18 @@
-#include "../include/JournalLib.h"
+ï»¿#include "../include/JournalLib.h"
 #include <string>
 #include <sstream> 
+#include <locale>
+#include <codecvt>
 Importance Message::GetImportance() {
 	return importance;
 }
 void Message::Save(std::fstream& file) {
 	if (file.is_open()) {
-		file << timestamp.tm_hour << timestamp.tm_min << static_cast<int>(importance) << text << std::endl;
+		file.seekg(0, std::ios::beg);
+		file << timestamp.tm_hour << ' ' << timestamp.tm_min << ' ' << static_cast<int>(importance) << ' ' << text << std::endl;
 	}
 	else {
-		throw std::runtime_error("Ôàéë íå îòêðûò äëÿ çàïèñè");
+		throw std::runtime_error("Ð¤Ð°Ð¹Ð» Ð½Ðµ Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚ Ð´Ð»Ñ Ð·Ð°Ð¿Ð¸ÑÐ¸");
 	}
 }
 
@@ -17,19 +20,19 @@ void Message::ReadFromFile(std::fstream& file) {
 
 	int i;
 	if (!file.is_open()) {
-		throw std::runtime_error("Ôàéë íå îòêðûò äëÿ ÷òåíèÿ");
+		throw std::runtime_error("Ð¤Ð°Ð¹Ð» Ð½Ðµ Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚ Ð´Ð»Ñ Ñ‡Ñ‚ÐµÐ½Ð¸Ñ");
 	}
 
 	std::string line;
 	if (!std::getline(file, line)) {
-		throw std::runtime_error("Íå óäàëîñü ïðî÷èòàòü ñòðîêó èç ôàéëà");
+		throw std::runtime_error("ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¿Ñ€Ð¾Ñ‡Ð¸Ñ‚Ð°Ñ‚ÑŒ ÑÑ‚Ñ€Ð¾ÐºÑƒ Ð¸Ð· Ñ„Ð°Ð¹Ð»Ð°");
 	}
 
 	std::istringstream iss(line);
 
 	
 	if (!(iss >> timestamp.tm_hour >> timestamp.tm_min)) {
-		throw std::runtime_error("Îøèáêà ôîðìàòà äàííûõ â ñòðîêå");
+		throw std::runtime_error("ÐžÑˆÐ¸Ð±ÐºÐ° Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚Ð° Ð´Ð°Ð½Ð½Ñ‹Ñ… Ð² ÑÑ‚Ñ€Ð¾ÐºÐµ");
 	}
 	iss >> i;
 	switch (i)
@@ -44,11 +47,26 @@ void Message::ReadFromFile(std::fstream& file) {
 		importance = High;
 		break;
 	default:
-		throw std::runtime_error("Íåèçâåñòíûé óðîâåíü âàæíîñòè");
+		throw std::runtime_error("ÐÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ñ‹Ð¹ ÑƒÑ€Ð¾Ð²ÐµÐ½ÑŒ Ð²Ð°Ð¶Ð½Ð¾ÑÑ‚Ð¸");
 		break;
 	}
 
-	// ×òåíèå îñòàâøåãîñÿ òåêñòà
+	// Ð§Ñ‚ÐµÐ½Ð¸Ðµ Ð¾ÑÑ‚Ð°Ð²ÑˆÐµÐ³Ð¾ÑÑ Ñ‚ÐµÐºÑÑ‚Ð°
 	std::getline(iss >> std::ws, text);  
 
+}
+void Message::Print() {
+
+	std::wstring level = [this]() {
+		switch (importance) {
+		case Low: return L"Low";
+		case Medium: return L"Medium";
+		case High: return L"High";
+		default: return L"Unknown";
+		}
+	}();
+	
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	std::wstring wtext = converter.from_bytes(text);
+	std::wcout << timestamp.tm_hour << ':' << timestamp.tm_min << ' ' << level << ' ' << wtext << std::endl;
 }
